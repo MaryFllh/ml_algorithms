@@ -37,3 +37,15 @@ class Activation:
         return np.multiply(output_gradient, self.activation_prime(self.input))
 
 
+class Dropout:
+    def __init__(self, dropout=.1):
+        self.dropout = dropout
+
+    def forward(self, input):
+        self.mask = np.random.rand(input.shape[0], input.shape[1]) < (1 - self.dropout)
+        return np.multiply(input, self.mask) / (1 - self.dropout)
+    
+    def backward(self, output_gradient, learning_rate):
+        return np.multiply(output_gradient, self.mask) / (1 - self.dropout)
+
+        

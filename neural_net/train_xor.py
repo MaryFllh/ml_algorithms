@@ -1,7 +1,7 @@
 import numpy as np
 
-from activations import ReLU 
-from layers import Dense
+from activations import ReLU
+from layers import Dense, Dropout
 from loss import mse_loss, mse_prime
 
 
@@ -13,13 +13,12 @@ def train(X, Y, epochs, learning_rate):
             output = x
             for layer in model:
                 output = layer.forward(output)
-            
             error += mse_loss(output, y)
             
             # backward pass
             output_gradient = mse_prime(output, y)
             for layer in reversed(model):
-               output_gradient = layer.backward(output_gradient, learning_rate)
+                output_gradient = layer.backward(output_gradient, learning_rate)
         
         error /= len(X)
         print(f"At epoch {i + 1} mse error is {error}")
@@ -32,6 +31,7 @@ if __name__ == "__main__":
         Dense(2, 3),
         ReLU(),
         Dense(3, 1),
+        Dropout(),
         ReLU(),
     ]
     

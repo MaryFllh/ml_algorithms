@@ -22,3 +22,13 @@ class Tanh(Activation):
             return 1 - np.tanh(X) ** 2
 
         super().__init__(tanh, tanh_prime)
+
+class Sigmoid(Activation):
+    def __init__(self):
+        def sigmoid(X):
+            return 1 / (1 + np.exp(-X))
+        
+        def sigmoid_prime(X):
+            return sigmoid(X) * (1 - sigmoid(X))
+
+        super().__init__(sigmoid, sigmoid_prime)

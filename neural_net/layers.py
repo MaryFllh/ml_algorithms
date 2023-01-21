@@ -22,13 +22,13 @@ class Dense:
 
 class Convolutional:
     def __init__(self, input_shape: tuple, kernal_shape: tuple, stride: int = 1):
-        self.kernal_shape = kernal_shape
         self.input_shape = input_shape
         self.input_depth, self.input_height, self.input_width = input_shape
         self.kernal_depth, self.kernal_height, self.kernal_width = kernal_shape
-        self.output_height = (self.input_height - self.kernal_height + 1) / stride
-        self.output_width = (self.input_width - self.kernal_width + 1) / stride
+        self.output_height = int((self.input_height - self.kernal_height + 1) / stride)
+        self.output_width = int((self.input_width - self.kernal_width + 1) / stride)
         self.output_depth = self.kernal_depth
+        self.kernal_shape = (self.output_depth, self.input_depth, self.kernal_height, self.kernal_width)
 
         self.kernals = np.random.randn(*self.kernal_shape)
         self.biases = np.random.randn(self.output_depth, self.output_height, self.output_width)
@@ -42,8 +42,8 @@ class Convolutional:
         return output
     
     def backward(self, output_gradient, learning_rate):
-        kernal_gradient = np.zeros(*self.kernal_shape)
-        input_gradient = np.zeros(*self.input_shape)
+        kernal_gradient = np.zeros(self.kernal_shape)
+        input_gradient = np.zeros(self.input_shape)
 
         for i in range(self.output_depth):
             for j in range(self.input_depth):

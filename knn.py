@@ -4,12 +4,11 @@ from collections import Counter
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
+from utils import euclidean_distance
+
 class KNN:
     def __init__(self, k=5):
         self.k = k
-    
-    def euclidean(self, x1, x2):
-        return np.sqrt(np.sum(x1 - x2) ** 2)
     
     def fit(self, X, Y):
         self.X_train = X
@@ -19,7 +18,7 @@ class KNN:
         return [self.find_nearest_neighbors(x) for x in X]
 
     def find_nearest_neighbors(self, x):
-        distances = [self.euclidean(x, x_train) for x_train in self.X_train]
+        distances = [euclidean_distance(x, x_train) for x_train in self.X_train]
         nearest_neighbors_idx = np.argsort(distances)[:self.k]
         nearest_neighbors = [self.Y_train[i] for i in nearest_neighbors_idx]
         return Counter(nearest_neighbors).most_common()[0][0]

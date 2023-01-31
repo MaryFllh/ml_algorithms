@@ -13,7 +13,6 @@ class LinearRegression:
         n_samples, n_features = X.shape
         self.weights = np.zeros(n_features)
         self.bias = 0
-
         for _ in range(self.n_iter):
             preds = np.dot(X, self.weights) + self.bias
             dw = (2 / n_samples ) * np.dot(X.T, (preds - y))

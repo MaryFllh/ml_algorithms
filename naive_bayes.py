@@ -3,9 +3,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn import datasets
 
+
 def accuracy(y_true, y_pred):
     accuracy = np.sum(y_true == y_pred) / len(y_true)
     return accuracy
+
 
 class NaiveBayes:
     def fit(self, X, y):
@@ -18,7 +20,7 @@ class NaiveBayes:
         self._priors = np.zeros(classes_num, dtype=np.float64)
 
         for idx, c in enumerate(self.unique_classes):
-            X_c = X[y == c] # gives features of class c
+            X_c = X[y == c]  # gives features of class c
             self._mean[idx, :] = np.mean(X_c, axis=0)
             self._var[idx, :] = np.var(X_c, axis=0)
             self._priors[idx] = len(X_c) / samples_num
@@ -35,11 +37,11 @@ class NaiveBayes:
             posterior = prior + likelihood
             posteriors.append(posterior)
         return np.argmax(posteriors)
-    
+
     def _compute_likelihood(self, idx, x):
-        nominator = np.exp(-(x - self._mean[idx]) ** 2 / (2 * self._var[idx]))
+        nominator = np.exp(-((x - self._mean[idx]) ** 2) / (2 * self._var[idx]))
         denominator = np.sqrt(2 * np.pi * self._var[idx])
-        return  np.sum(np.log(nominator / denominator))
+        return np.sum(np.log(nominator / denominator))
 
 
 if __name__ == "__main__":

@@ -10,13 +10,16 @@ from layers import Convolutional, Dense, Reshape
 
 
 def load_data(train=True):
-    transform=transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    dataset = datasets.MNIST('../data', train=train, download=True, transform=transform)
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+    dataset = datasets.MNIST("../data", train=train, download=True, transform=transform)
     train_loader = torch.utils.data.DataLoader(dataset)
 
     return train_loader
+
 
 def preprocess_data(data_loader):
     """
@@ -34,22 +37,32 @@ def preprocess_data(data_loader):
     y = y.reshape(len(y), 2, 1)
     return x, y
 
-def train(X_train, y_train, model, loss_function, loss_function_prime, epoch=1000, learning_rate=.01):
+
+def train(
+    X_train,
+    y_train,
+    model,
+    loss_function,
+    loss_function_prime,
+    epoch=1000,
+    learning_rate=0.01,
+):
     for i in range(epoch):
         error = 0
         for X, y in zip(X_train, y_train):
-            
+
             # forward
             pred = predict(X, model)
             error += loss_function(pred, y)
-            
+
             # backward
             output_gradient = loss_function_prime(pred, y)
             for layer in reversed(model):
                 output_gradient = layer.backward(output_gradient, learning_rate)
         error /= len(X)
         print(f"At epoch {i} the error is {error}")
-    
+
+
 def predict(X_test, model):
     output = X_test
     for layers in model:
@@ -57,7 +70,7 @@ def predict(X_test, model):
     return output
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     train_loader = load_data()
     test_loader = load_data(train=False)
     X_train, y_train = preprocess_data(train_loader)[:100]
@@ -70,16 +83,10 @@ if __name__=="__main__":
         Dense(5 * 26 * 26, 100),
         Sigmoid(),
         Dense(100, 2),
-        Sigmoid()
+        Sigmoid(),
     ]
-    
-    train(
-        X_train, 
-        y_train,
-        model,
-        binary_ce_loss,
-        binary_ce_loss_prime
-    )
+
+    train(X_train, y_train, model, binary_ce_loss, binary_ce_loss_prime)
 
     for x, y in zip(X_test, y_test):
         output = predict(x, model)

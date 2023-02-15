@@ -5,9 +5,9 @@ from collections import Counter
 
 class Node:
     def __init__(
-        self, feature=None, threshold=None, left=None, right=None, value=None
+        self, feature_ind=None, threshold=None, left=None, right=None, value=None
     ) -> None:
-        self.feature = feature
+        self.feature_ind = feature_ind
         self.threshold = threshold
         self.left = left
         self.right = right
@@ -68,17 +68,20 @@ class DecisionTree:
         ):
             # stopping criteria is satisfied, return node with most common label as its value
             terminal_node_value = self._find_most_common_label(y)
-            return Node(terminal_node_value)
+            return Node(value=terminal_node_value)
 
         # otherwise, keep splitting on the best feature's best value
-
-        # find best splits on the number of desired features
-        feature_inds = np.random.choice(samples_num, self.features_num, replace=False)
-        best_feature, best_thresh = self._find_best_split(X, y, feature_inds)
+        feature_inds = np.random.choice(features_num, self.features_num, replace=False)
+        best_feature_ind, best_thresh = self._find_best_split(X, y, feature_inds)
 
         # create children
+        left_child_inds, right_child_inds = self._create_children(X[:, best_feature_ind], best_thresh)
+        left_child = self._create_decision_tree(X[left_child_inds, :], y[left_child_inds], depth+1)
+        right_child = self._create_decision_tree(X[right_child_inds, :], y[right_child_inds], depth+1)
+        
+        return Node(best_feature_ind, best_thresh, left_child, right_child)
 
-    def _find_most_common_label(y):
+    def _find_most_common_label(self, y):
         label_counts = Counter(y)
         return label_counts.most_common(1)[0][0]
 
@@ -119,6 +122,9 @@ class DecisionTree:
     def _compute_information_gain(self, X, y, threshold):
         """
         Computes the information gain from splitting X on threshold
+        which equals the entropy of X minus the weighted entropy of
+        its children. The children are the samples with smaller or bigger
+        than the threshold.
 
         Args:
             X(array): input features
@@ -128,10 +134,71 @@ class DecisionTree:
         Returns:
             information_gain(float): the information gain from making the split
         """
-        pass
+        parent_entropy = self._compute_entropy(y)
 
-    def _compute_entropy(self, X):
-        pass
+        # split to left and right based on threshold
+        left_child_inds, right_child_inds = self._create_children(X, threshold)
+            
+        if len(left_child_inds) == 0 or len(right_child_inds) == 0:
+            # there is no change in distribution made by the split
+            return 0
 
-    def predit(self, X):
-        pass
+        # compute weight of each split
+        left_weight = len(left_child_inds) / len(y)
+        right_weight = len(right_child_inds) / len(y)
+        
+        # compute child entropy
+        left_entropy = left_weight * self._compute_entropy(y[left_child_inds])
+        right_entropy = right_weight * self._compute_entropy(y[right_child_inds]) 
+        child_entropy = left_entropy + right_entropy
+        
+        return parent_entropy - child_entropy
+
+    def _compute_entropy(self, y):
+        """
+        Computes the entropy based on the labels y. Entropy is calculated as
+        the summation of the probability of occuring times the log2 of that
+        probability over all possible values. - sum (p * log2 p)
+
+        Args:
+            y(array): label of each data point
+
+        Returns:
+            entropy(float): the entropy of the input
+        """
+        probs = np.bincount(y) / len(y)
+        entropy = -sum([p * np.log2(p) for p in probs if p > 0])
+        return entropy
+        
+    def _create_children(self, X, threshold):
+        """
+        Given input features and the threshold to be split on,
+        splits the input to left and right children.
+
+        Args:
+            X(array): input feature that needs to be split based on its values
+            threshold(float): threshold that determines the split
+
+        Returns:
+            left_child_inds(array): indices corresponding to the subset of the 
+                input that has values smaller/equal than threshold
+            right_child_inds(array): indices corresponding to a subset of the
+                input that has values larger than threshold
+        """
+        left_child_inds = np.argwhere(X <= threshold).flatten()
+        right_child_inds = np.argwhere(X > threshold).flatten()
+        return left_child_inds, right_child_inds
+
+    def predict(self, X):
+        return [self._traverse_tree(Xi, self.root) for Xi in X] 
+    
+    def _traverse_tree(self, X, root):
+        if root.is_leaf_node():
+            return root.value
+
+        if X[root.feature_ind] <= root.threshold:
+            # go down left child
+            return self._traverse_tree(X, root.left)
+        else:
+            # go down right child
+            return self._traverse_tree(X, root.right)
